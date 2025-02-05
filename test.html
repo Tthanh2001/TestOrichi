@@ -23,14 +23,14 @@ const DiscountForm = () => {
     }
   };
 
-  // Thêm option mới
+  // Add option mới
   const handleAddOption = () => {
     const nextId = options.length + 1;
     const nextQuantity = options[options.length - 1]?.quantity + 1 || 1;
     setOptions([...options, { id: nextId, title: '', quantity: nextQuantity, discountType: 'None', amount: '' }]);
   };
 
-  // Xóa option
+  // Delete option
   const handleRemoveOption = (id) => {
     setOptions(options.filter(option => option.id !== id));
   };
