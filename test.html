@@ -1,0 +1,141 @@
+import React, { useState } from 'react';
+import { Button, TextField, Modal, Stack, Select, Card } from '@shopify/polaris';
+import { useForm, Controller } from 'react-hook-form';
+
+const DiscountForm = () => {
+  const [options, setOptions] = useState([
+    { id: 1, title: 'Single', quantity: 1, discountType: 'None', amount: '' },
+    { id: 2, title: 'Duo', quantity: 2, discountType: '% discount', amount: '10' },
+  ]);
+  
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm();
+  const [campaign, setCampaign] = useState('');
+  const [showModal, setShowModal] = useState(false);
+
+  // Validate function
+  const onSubmit = (data) => {
+    // Kiểm tra lỗi validate
+    if (!campaign || options.length < 1 || !data.title || options.some(option => !option.quantity || !option.amount || !option.title)) {
+      setShowModal(true);
+    } else {
+      // Giả lập gọi API khi form hợp lệ
+      console.log('Form submitted', data);
+    }
+  };
+
+  // Thêm option mới
+  const handleAddOption = () => {
+    const nextId = options.length + 1;
+    const nextQuantity = options[options.length - 1]?.quantity + 1 || 1;
+    setOptions([...options, { id: nextId, title: '', quantity: nextQuantity, discountType: 'None', amount: '' }]);
+  };
+
+  // Xóa option
+  const handleRemoveOption = (id) => {
+    setOptions(options.filter(option => option.id !== id));
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <Stack vertical>
+        {/* Campaign Name */}
+        <TextField
+          label="Campaign Name"
+          value={campaign}
+          onChange={setCampaign}
+          error={errors.campaign && 'Campaign name is required'}
+          required
+        />
+
+        {/* Options */}
+        {options.map((option, index) => (
+          <Card key={option.id} sectioned>
+            <Stack vertical>
+              {/* Title */}
+              <Controller
+                name={`options[${index}].title`}
+                control={control}
+                defaultValue={option.title}
+                rules={{ required: 'Title is required' }}
+                render={({ field }) => (
+                  <TextField
+                    label="Title"
+                    {...field}
+                    error={errors?.options?.[index]?.title?.message}
+                    required
+                  />
+                )}
+              />
+              {/* Quantity */}
+              <Controller
+                name={`options[${index}].quantity`}
+                control={control}
+                defaultValue={option.quantity}
+                render={({ field }) => (
+                  <TextField
+                    label="Quantity"
+                    {...field}
+                    type="number"
+                    required
+                    error={errors?.options?.[index]?.quantity && 'Quantity is required and must be a number'}
+                  />
+                )}
+              />
+              {/* Discount Type */}
+              <Controller
+                name={`options[${index}].discountType`}
+                control={control}
+                defaultValue={option.discountType}
+                render={({ field }) => (
+                  <Select
+                    label="Discount Type"
+                    {...field}
+                    options={[
+                      { label: 'None', value: 'None' },
+                      { label: '% discount', value: '% discount' },
+                      { label: 'Discount / each', value: 'Discount / each' },
+                    ]}
+                    onChange={value => setValue(`options[${index}].discountType`, value)}
+                  />
+                )}
+              />
+              {/* Amount */}
+              {(option.discountType === '% discount' || option.discountType === 'Discount / each') && (
+                <Controller
+                  name={`options[${index}].amount`}
+                  control={control}
+                  defaultValue={option.amount}
+                  render={({ field }) => (
+                    <TextField
+                      label="Amount"
+                      {...field}
+                      type="number"
+                      suffix={option.discountType === '% discount' ? '%' : '$'}
+                      required
+                      error={errors?.options?.[index]?.amount && 'Amount is required and must be a number'}
+                    />
+                  )}
+                />
+              )}
+            </Stack>
+            <Button onClick={() => handleRemoveOption(option.id)} destructive>Remove Option</Button>
+          </Card>
+        ))}
+        <Button onClick={handleAddOption}>Add Option</Button>
+
+        {/* Save Button */}
+        <Button primary onClick={handleSubmit(onSubmit)}>Save</Button>
+
+        {/* Modal - Show validation error */}
+        <Modal open={showModal} onClose={() => setShowModal(false)} title="Validation Error" primaryAction={{
+          content: 'Ok',
+          onAction: () => setShowModal(false),
+        }}>
+          <p>Please fill all required fields and ensure the format is correct.</p>
+        </Modal>
+      </Stack>
+    </div>
+  );
+};
+
+export default DiscountForm;
